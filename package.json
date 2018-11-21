@@ -1,0 +1,19 @@
+{
+  "name": "injecture",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DynoSRC/injecture.git"
+  },
+  "author": "Ryan Stevens",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DynoSRC/injecture/issues"
+  },
+  "homepage": "https://github.com/DynoSRC/injecture#readme"
+}
