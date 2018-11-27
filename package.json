@@ -1,8 +1,8 @@
 {
   "name": "injecture",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "mocha node_modules/mocha/bin/_mocha --require @babel/register $(find ./src -name '*-test.js')",
     "test-debug": "node --inspect-brk=9229 node_modules/mocha/bin/_mocha  --require @babel/register $(find ./src -name '*-test.js')",
