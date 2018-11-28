@@ -1,4 +1,4 @@
-const injectoreStore = require('./injecture-store');
+const globalInjectureStore = require('./injecture-store');
 
 const registerDefaults = {
   attributes: {},
@@ -11,7 +11,7 @@ const registerDefaults = {
   factoryContext: {},
 };
 
-function addToInstanceStore(key, instance, instanceIndexField) {
+function addToInstanceStore(injectoreStore, key, instance, instanceIndexField) {
 
   const {
     instances,
@@ -31,12 +31,13 @@ class Injecture {
   constructor() {
     this.get = this.create;
     this.reducers = {};
+    this.injectoreStore = globalInjectureStore;
   }
 
   create(key, ...factoryArgs) {
     const {
       factory, options, instances,
-    } = injectoreStore[key];
+    } = this.injectoreStore[key];
 
     if (!factory) return undefined;
 
@@ -51,7 +52,7 @@ class Injecture {
 
     // singletons have to be registered
     if (options.singleton || options.mapInstances) {
-      addToInstanceStore(key, instance, options.instanceIndexField);
+      addToInstanceStore(this.injectoreStore, key, instance, options.instanceIndexField);
     }
 
     options.interfaces.forEach(interfaceType => {
@@ -65,7 +66,7 @@ class Injecture {
       };
 
       if (interfaceType.mapInstances) {
-        addToInstanceStore(interfaceType.type, instance, interfaceType.instanceIndexField);
+        addToInstanceStore(this.injectoreStore, interfaceType.type, instance, interfaceType.instanceIndexField);
       }
     });
     return instance;
@@ -100,13 +101,13 @@ class Injecture {
 
   register(key, factory, options) {
     options = Object.assign({}, registerDefaults, options);
-    if (injectoreStore[key]) {
+    if (this.injectoreStore[key]) {
       // kinda harsh but we really need to stricly enforce
       // this.  Better blow up at design / testing time
       // rather than have strange errors crop up over time
       throw new Error(`The factory ${key} is already registered`);
     }
-    injectoreStore[key] = {
+    this.injectoreStore[key] = {
       factory,
       options,
       instances: {},
@@ -114,34 +115,34 @@ class Injecture {
     options.interfaces.forEach(interfaceType => {
       // convert to a string
       if (interfaceType.type) interfaceType = interfaceType.type;
-      if (!injectoreStore[interfaceType]) {
-        injectoreStore[interfaceType] = {
+      if (!this.injectoreStore[interfaceType]) {
+        this.injectoreStore[interfaceType] = {
           instances: {},
           keys: [],
         };
       }
 
       // keep a reverse mapping
-      injectoreStore[interfaceType].keys.push(key);
+      this.injectoreStore[interfaceType].keys.push(key);
 
     });
   }
 
   allInstances(key) {
-    if (!injectoreStore[key]) return [];
+    if (!this.injectoreStore[key]) return [];
 
-    return Object.keys(injectoreStore[key].instances).map(index => {
-      return injectoreStore[key].instances[index];
+    return Object.keys(this.injectoreStore[key].instances).map(index => {
+      return this.injectoreStore[key].instances[index];
     });
 
   }
 
   getKeysByInterface(interfaceType) {
-    const interfaces = injectoreStore[interfaceType] || {};
+    const interfaces = this.injectoreStore[interfaceType] || {};
     const reducers = this.reducers[interfaceType] || [defaultReducer];
 
     const keys = interfaces.keys.map(key => {
-      return {key, options: injectoreStore[key].options};
+      return {key, options: this.injectoreStore[key].options};
     });
 
     return reducers.reduce((classKeys, reducer) => {
@@ -182,5 +183,15 @@ function defaultReducer(keys) {
 }
 
 const injectureSingleton = new Injecture();
+
+/**
+ * Huh?  So the reason we are registering itself
+ * is because this module is exporing a signleton
+ * so callers can immediately have a "injecture" instance.
+ *
+ * However there may be times you may want to make your own
+ * instance of injecuture, probably for unit test purposes
+ */
+injectureSingleton.registerClass('injecture', Injecture);
 
 module.exports = injectureSingleton;
