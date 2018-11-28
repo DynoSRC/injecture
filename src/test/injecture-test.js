@@ -462,4 +462,32 @@ describe('Injecture', function() {
     done();
   });
 
+  it('can get a new instance of injecture from itself', done => {
+
+    const customStore = {};
+    injecture.register('MyCustomStore', function() {
+      return customStore;
+    }, {
+      interfaces: ['instanceStore']
+    });
+
+    injecture.addInterfaceReducers({
+      interfaceType: 'instanceStore',
+      reducer: function(keys) {
+        console.log("####")
+        return keys.filter(key => key.key === 'MyCustomStore');
+      }
+    });
+
+    const newInjecture = injecture.get('Injecture');
+    assert.notEqual(newInjecture, injecture);
+
+    assert.equal(Object.keys(customStore).length, 3, 'There should only be Injecture, defaultInstanceStore and the instanceStore interface');
+    newInjecture.register(class ClassCC {});
+    assert.equal(Object.keys(customStore).length, 4);
+
+
+    done();
+  });
+
 });
