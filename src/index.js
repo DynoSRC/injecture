@@ -144,20 +144,36 @@ class Injecture {
       return {key, options: injectoreStore[key].options};
     });
 
-    return reducers.reduce((newKeys, reducer) => {
-      return reducer(newKeys);
+    return reducers.reduce((classKeys, reducer) => {
+      // if the reducer chain already
+      // gave an answer to which interface
+      // to select, then short circut the chain
+      if (classKeys.length === 1) return classKeys;
+      return reducer(classKeys);
     }, keys).map(keyObj => keyObj.key);
   }
 
-  addReducers(...reducers) {
+  addInterfaceReducers(...reducers) {
     reducers.forEach(reducerObj => {
-      this.addReducer(reducerObj.key, reducerObj.reducer);
+      this.addInterfaceReducer(reducerObj.interfaceType || reducerObj.key, reducerObj.reducer);
     });
   }
 
-  addReducer(key, reducer) {
-    if (!this.reducers[key]) this.reducers[key] = [];
-    this.reducers[key].push(reducer);
+  addInterfaceReducer(interfaceType, reducer) {
+    if (!this.reducers[interfaceType]) this.reducers[interfaceType] = [];
+    this.reducers[interfaceType].push(reducer);
+  }
+
+  getInstanceByInterface(interfaceType) {
+    let key = this.getKeysByInterface(interfaceType);
+    if (key.length > 1) {
+      console.warn(`Injecture:: there may be a potential issue as getInstanceByInterface found more than one class for interface {${interfaceType}}.  Maybe look at your interfaceReducers?`);
+      // take the first one which is debatable,
+      // we might want to throw here
+      key = key[0];
+    }
+
+    return this.get(key);
   }
 }
 
