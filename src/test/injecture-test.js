@@ -186,8 +186,8 @@ describe('Injecture', function() {
 
   it('can add reducers to supply logic how get the right interface', (done) => {
 
-    injecture.addReducers({
-      key: 'bar',
+    injecture.addInterfaceReducers({
+      interfaceType: 'bar',
       reducer: function reducer(keys) {
         return keys.filter(key => key.key === 'ClassL');
       },
@@ -212,6 +212,139 @@ describe('Injecture', function() {
     const keys = injecture.getKeysByInterface('bar');
     assert.equal(keys.length, 1);
     assert.equal(keys[0], 'ClassL');
+
+    done();
+  });
+
+
+  it('can return an instance from an interface', (done) => {
+
+    class ClassN {}
+    injecture.registerClass(ClassN, {
+      interfaces: ['baz']
+    });
+
+    const classN = injecture.getInstanceByInterface('baz');
+    assert.ok(classN instanceof ClassN);
+
+    done();
+  });
+
+  it('when there is no reducer, getInstanceByInterface returns the first registered', done => {
+    class ClassO {}
+    injecture.registerClass(ClassO, {
+      interfaces: ['beep'],
+      singleton: true,
+    });
+
+    const classO = injecture.getInstanceByInterface('beep');
+    assert.ok(classO);
+    assert.ok(classO instanceof ClassO);
+
+    // This should POSSIBLY throw. Probably not. I can't think of a valid use case
+    // for having two singletons that implement the same interfaces (in the same
+    // thread/runtime at least), but I'm 67% sure that one exists.
+    injecture.registerClass(class ClassP {}, {
+      interfaces: ['beep'],
+      singleton: true,
+    });
+
+    const keys = injecture.getKeysByInterface('beep');
+    assert.equal(keys.length, 2, 'prove that interface beep has two classes');
+
+
+    // This should DEFINITELY throw, or at least produce a warning. Something is
+    // fishy when we are asking for a singleton by interface and there are
+    // multiple candidates.
+    const secondClassO = injecture.getInstanceByInterface('beep');
+    assert.ok(secondClassO);
+    assert.ok(secondClassO instanceof ClassO);
+
+    // TODO: spy console.warn to ensure it was called
+
+    done();
+  });
+
+
+  it('getInstanceByInterface will create an instance from the key the reducer returns', done => {
+
+    class ClassQ {
+      get() { return 'nike'}
+    }
+    class ClassR {
+      get() { return 'rebok'}
+    }
+
+    injecture.registerClass(ClassQ, {
+      interfaces: ['shoe']
+    });
+
+    injecture.registerClass(ClassR, {
+      interfaces: ['shoe']
+    });
+
+    let classToFilter = 'ClassR'
+
+    injecture.addInterfaceReducers({
+      interfaceType: 'shoe',
+      reducer: function reducer(keys) {
+        return keys.filter(key => key.key === classToFilter);
+      }
+    });
+
+
+    let shoe = injecture.getInstanceByInterface('shoe');
+    assert.ok(shoe instanceof ClassR);
+    assert.equal(shoe.get(), 'rebok');
+
+    // Change the class the reducer is going to filter on
+    // This somewhat shows reducers can be flexible depending
+    // how you design them. ALSO, reducers are NOT pure functions
+    classToFilter = 'ClassQ';
+
+    shoe = injecture.getInstanceByInterface('shoe');
+    assert.ok(shoe instanceof ClassQ);
+    assert.equal(shoe.get(), 'nike');
+
+
+    done();
+  });
+
+
+  it('will not run reducers if another one returns a single key', done => {
+
+    class ClassS { }
+    class ClassT { }
+    class ClassU { }
+
+    injecture.registerClass(ClassS, {
+      interfaces: ['meep']
+    });
+
+    injecture.registerClass(ClassT, {
+      interfaces: ['meep']
+    });
+
+    injecture.registerClass(ClassU, {
+      interfaces: ['meep']
+    });
+
+
+    injecture.addInterfaceReducers({
+      interfaceType: 'meep',
+      reducer: function reducer(keys) {
+        return [keys.pop()];
+      }
+    },{
+      interfaceType: 'meep',
+      reducer: function reducer(keys) {
+        throw new Error('Should not be ran');
+      }
+    });
+
+
+    const shoe = injecture.getInstanceByInterface('meep');
+    assert.ok(shoe instanceof ClassU);
 
     done();
   });
