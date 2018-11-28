@@ -9,7 +9,7 @@
     "test-watch": "nodemon --watch src --exec \"npm test | npx bunyan\"",
     "test-build": "nodemon --watch src --exec \"npm test && npm run build\"",
     "build": "rm -rf dist && babel src -d dist --source-maps",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm test && npm run build"
   },
   "repository": {
     "type": "git",
