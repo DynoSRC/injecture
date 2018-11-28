@@ -56,7 +56,7 @@ class Injecture {
     // (mostly for unit test purposes), then can simply
     // register an interface `injectionStore`, then add an
     // interfaceReducer to return their custom implmentation
-    this.register('DefaultInjectionStore', () => { this.instanceStore }, {
+    this.register('DefaultInjectionStore', () => { return this.instanceStore }, {
       interfaces: ['instanceStore']
     });
   }
