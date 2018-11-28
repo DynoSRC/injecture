@@ -348,4 +348,118 @@ describe('Injecture', function() {
 
     done();
   });
+
+  it('will inject a prop into an instance from an injection', done => {
+
+    class ClassV {
+      say() {
+        return 'hello ' + this.namer.name() + ', ' + this.greeter.ask();
+      }
+    }
+    class ClassW {
+      name() {
+        return 'ryan';
+      }
+    }
+    class ClassX {
+      ask() { return 'how are you'}
+    }
+
+    injecture.registerClass(ClassV, {
+      injections: {
+        namer: 'ClassW',  // shows you can pass a string and that will become { key: ClassW }
+        greeter: {
+          key: 'ClassX'
+        }
+      }
+    })
+
+    injecture.registerClass(ClassW);
+    injecture.registerClass(ClassX);
+
+    const classV = injecture.get('ClassV');
+
+    assert.equal(classV.say(), 'hello ryan, how are you')
+    done();
+  });
+
+  it('will inject constructor args', done => {
+    class ClassY {
+      constructor(injections, secondArg, thirdArg) {
+        this.injections = injections;
+        this.secondArg = secondArg;
+        this.thirdArg = thirdArg;
+      }
+    }
+
+    let instanceCnt =0;
+    class ClassZ {
+      constructor() {
+        instanceCnt++;
+      }
+      meow() { return 1;}
+    }
+
+    injecture.registerClass(ClassY, {
+      injections: {
+        test: {
+          key: 'ClassZ',
+          constructor: true
+        },
+        pest: {
+          key: 'ClassZ',
+          constructor: true
+        }
+      }
+    });
+    injecture.registerClass(ClassZ);
+
+    const y1 = injecture.get('ClassY');
+    assert.equal(y1.injections.test.meow(), 1);
+    assert.equal(y1.injections.pest.meow(), 1);
+    assert.equal(y1.secondArg, undefined);
+    assert.equal(y1.thirdArg, undefined);
+    assert.equal(instanceCnt, 2);
+    assert.equal(Object.keys(y1.injections).length, 2);
+
+    const y2 = injecture.get('ClassY', 'foo', 'bar');
+    assert.equal(y2.injections.test.meow(), 1);
+    assert.equal(y2.injections.pest.meow(), 1);
+    assert.equal(y2.secondArg, 'foo');
+    assert.equal(y2.thirdArg, 'bar');
+    assert.equal(instanceCnt, 4);
+    assert.equal(Object.keys(y2.injections).length, 2);
+
+    done();
+
+  });
+
+  it('will inject by interface', done => {
+
+    class ClassAA {
+    }
+
+    class ClassBB {
+      what() { return 'footlong' }
+    }
+
+
+    injecture.registerClass(ClassAA, {
+      injections: {
+        test: {
+          interface: 'hotdog'
+        }
+      }
+    });
+
+    injecture.registerClass(ClassBB, {
+      interfaces: ['hotdog']
+    });
+
+    const aa = injecture.get('ClassAA');
+    assert.equal(aa.test.what(), 'footlong');
+
+    done();
+  });
+
 });

@@ -1,11 +1,13 @@
 const globalInjectureStore = require('./injecture-store');
 
+
 const registerDefaults = {
   attributes: {},
   silent: false,
   singleton: false,
   mapInstances: false,
   instanceIndexField: null,
+  injections: {},
   interfaces: [],
   factoryArgs: [],
   factoryContext: {},
@@ -28,13 +30,14 @@ function addToInstanceStore(injectoreStore, key, instance, instanceIndexField) {
 
 class Injecture {
 
-  constructor() {
+  constructor(injections) {
     this.get = this.create;
     this.reducers = {};
     this.injectoreStore = globalInjectureStore;
   }
 
   create(key, ...factoryArgs) {
+    if (!this.injectoreStore[key]) throw new Error(`Key ${key} not found`);
     const {
       factory, options, instances,
     } = this.injectoreStore[key];
@@ -45,15 +48,65 @@ class Injecture {
       return instances[Object.keys(instances)[0]];
     }
 
+    const constructorInjections = {};
+    const propInjections = {};
+    Object.keys(options.injections).forEach(prop => {
+      let injection = options.injections[prop];
+
+      // normalize to object
+      if (typeof injection === 'string') {
+        injection = {
+          key: injection,
+          constructor: false
+        };
+      }
+
+      // flll in defaults;
+      injection = Object.assign({}, {
+        constructor: false, // true assume prop injected
+        constructorArgs: []
+      }, injection);
+
+      let instance;
+      if (injection.key) {
+        const args = [injection.key].concat(injection.constructorArgs);
+        instance = this.create.apply(this, args);
+      }
+      else if (injection.interface) {
+        console.log('getting by face ' +injection.interface)
+        instance = this.getInstanceByInterface(injection.interface);
+      }
+
+      if (injection.constructor) {
+        constructorInjections[prop] = instance;
+      }
+      else {
+        propInjections[prop] = instance;
+      }
+
+    });
+
     // eslint-disable-next-line prefer-rest-params
     const args = Array.prototype.slice.call(arguments).length > 1 ?
       factoryArgs : options.factoryArgs;
+
+    if (Object.keys(constructorInjections).length > 0) {
+      // injections via constructor will always come
+      // as FIRST parameter because we have no idea
+      // how many constructor args callers will invoke
+      // an object with via options.factoryArgs
+      args.unshift(constructorInjections);
+    }
     const instance = factory.apply(options.factoryContext, args);
+    Object.keys(propInjections).forEach(prop => {
+      instance[prop] = propInjections[prop];
+    });
 
     // singletons have to be registered
     if (options.singleton || options.mapInstances) {
       addToInstanceStore(this.injectoreStore, key, instance, options.instanceIndexField);
     }
+
 
     options.interfaces.forEach(interfaceType => {
 
@@ -94,8 +147,14 @@ class Injecture {
    */
   registerClassByKey(key, Klass, options = {attributes: {}}) {
 
-    this.register(key, function classFactor() {
-      return new Klass();
+    this.register(key, function classFactory(...args) {
+      if (args.length === 0) return new Klass();
+      else if (args.length === 1) return new Klass(args[0]);
+      else if (args.length === 2) return new Klass(args[0], args[1]);
+      else if (args.length === 3) return new Klass(args[0], args[1], args[2]);
+      else if (args.length === 4) return new Klass(args[0], args[1], args[2], args[3]);
+      else if (args.length === 5) return new Klass(args[0], args[1], args[2], args[3], args[4]);
+      // common, why would anyone need more than 5 constructor args
     }, options);
   }
 
@@ -192,6 +251,10 @@ const injectureSingleton = new Injecture();
  * However there may be times you may want to make your own
  * instance of injecuture, probably for unit test purposes
  */
-injectureSingleton.registerClass('injecture', Injecture);
+injectureSingleton.registerClass('injecture', Injecture, {
+  injections: {
+    'instanceStore': 'instanceStore'
+  }
+});
 
 module.exports = injectureSingleton;
