@@ -1,4 +1,3 @@
-const Emitter = require('eventemitter2').EventEmitter2;
 const injectoreStore = require('./injecture-store');
 
 const registerDefaults = {
@@ -30,12 +29,6 @@ function addToInstanceStore(key, instance, instanceIndexField) {
 class Injecture {
 
   constructor() {
-    const emitter = new Emitter({wildcard: true});
-    // eslint-disable-next-line guard-for-in
-    for (const field in emitter) {
-      this[field] = emitter[field];
-    }
-
     this.get = this.create;
     this.reducers = {};
   }
@@ -132,10 +125,6 @@ class Injecture {
       injectoreStore[interfaceType].keys.push(key);
 
     });
-    if (!options.silient) {
-      this.emit(`register.${key}`, key, factory, options);
-    }
-
   }
 
   allInstances(key) {
