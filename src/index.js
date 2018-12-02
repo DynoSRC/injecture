@@ -223,13 +223,13 @@ class Injecture {
 
   getKeysByInterface(interfaceType) {
     const interfaces = this.instanceStore[interfaceType] || {};
-    const reducers = this.reducers[interfaceType] || [defaultReducer];
+    const selectors = this.selectors[interfaceType] || [defaultSelector];
 
     const keys = interfaces.keys.map(key => {
       return {key, options: this.instanceStore[key].options};
     });
 
-    return reducers.reduce((classKeys, reducer) => {
+    return selectors.reduce((classKeys, reducer) => {
       // if the reducer chain already
       // gave an answer to which interface
       // to select, then short circut the chain
@@ -238,15 +238,15 @@ class Injecture {
     }, keys).map(keyObj => keyObj.key);
   }
 
-  addInterfaceReducers(...reducers) {
-    reducers.forEach(reducerObj => {
-      this.addInterfaceReducer(reducerObj.interfaceType || reducerObj.key, reducerObj.reducer);
+  addInterfaceSelectors(...selectors) {
+    selectors.forEach(selectorObj => {
+      this.addInterfaceSelector(selectorObj.interfaceType || selectorObj.key, selectorObj.selector);
     });
   }
 
-  addInterfaceReducer(interfaceType, reducer) {
-    if (!this.reducers[interfaceType]) this.reducers[interfaceType] = [];
-    this.reducers[interfaceType].push(reducer);
+  addInterfaceSelctor(interfaceType, selector) {
+    if (!this.selctors[interfaceType]) this.selctor[interfaceType] = [];
+    this.selctors[interfaceType].push(selector);
   }
 
   getInstanceByInterface(interfaceType) {
@@ -262,7 +262,7 @@ class Injecture {
   }
 }
 
-function defaultReducer(keys) {
+function defaultSelector(keys) {
   return keys;
 }
 
