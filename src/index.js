@@ -32,7 +32,7 @@ class Injecture {
 
   constructor(injections) {
     this.get = this.create;
-    this.reducers = {};
+    this.selectors = {};
     this.instanceStore = injections.instanceStore;
 
     /**
@@ -223,36 +223,43 @@ class Injecture {
 
   getKeysByInterface(interfaceType) {
     const interfaces = this.instanceStore[interfaceType] || {};
-    const reducers = this.reducers[interfaceType] || [defaultReducer];
+    const selectors = this.selectors[interfaceType] || [defaultSelector];
 
     const keys = interfaces.keys.map(key => {
       return {key, options: this.instanceStore[key].options};
     });
 
-    return reducers.reduce((classKeys, reducer) => {
-      // if the reducer chain already
+    return selectors.reduce((classKeys, selector) => {
+      // if the selector chain already
       // gave an answer to which interface
       // to select, then short circut the chain
       if (classKeys.length === 1) return classKeys;
-      return reducer(classKeys);
+      return selector(classKeys);
     }, keys).map(keyObj => keyObj.key);
   }
 
-  addInterfaceReducers(...reducers) {
-    reducers.forEach(reducerObj => {
-      this.addInterfaceReducer(reducerObj.interfaceType || reducerObj.key, reducerObj.reducer);
+  addInterfaceKeySelectors(...selectors) {
+    selectors.forEach(selectorObj => {
+      this.addInterfaceKeySelector(
+        selectorObj.interfaceType || selectorObj.key,    // key is backwards compat, remove v2.0.0
+        (selectorObj.selector || selectorObj.reducer));  // reducer is backwards compat, remove v2.0.0
     });
   }
 
-  addInterfaceReducer(interfaceType, reducer) {
-    if (!this.reducers[interfaceType]) this.reducers[interfaceType] = [];
-    this.reducers[interfaceType].push(reducer);
+  addInterfaceKeySelector(interfaceType, selector) {
+    if (!this.selectors[interfaceType]) this.selectors[interfaceType] = [];
+    this.selectors[interfaceType].push(selector);
   }
+  
+  // these are only here for backwards compat, remove this @ v2.0.0
+  addInterfaceReducers(...args) { this.addInterfaceKeySelectors(...args); }
+  addInterfaceReducer(...args) {  this.addInterfaceKeySelector(...args); }
+
 
   getInstanceByInterface(interfaceType) {
     let key = this.getKeysByInterface(interfaceType);
     if (key.length > 1) {
-      console.warn(`Injecture:: there may be a potential issue as getInstanceByInterface found more than one class for interface {${interfaceType}}.  Maybe look at your interfaceReducers?`);
+      console.warn(`Injecture:: there may be a potential issue as getInstanceByInterface found more than one class for interface {${interfaceType}}.  Maybe look at your interfaceselectors?`);
       // take the first one which is debatable,
       // we might want to throw here
       key = key[0];
@@ -262,7 +269,7 @@ class Injecture {
   }
 }
 
-function defaultReducer(keys) {
+function defaultSelector(keys) {
   return keys;
 }
 
