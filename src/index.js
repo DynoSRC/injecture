@@ -173,13 +173,7 @@ class Injecture {
   registerClassByKey(key, Klass, options = {attributes: {}}) {
 
     this.register(key, function classFactory(...args) {
-      if (args.length === 0) return new Klass();
-      else if (args.length === 1) return new Klass(args[0]);
-      else if (args.length === 2) return new Klass(args[0], args[1]);
-      else if (args.length === 3) return new Klass(args[0], args[1], args[2]);
-      else if (args.length === 4) return new Klass(args[0], args[1], args[2], args[3]);
-      else if (args.length === 5) return new Klass(args[0], args[1], args[2], args[3], args[4]);
-      // common, why would anyone need more than 5 constructor args
+      return new Klass(...args);
     }, options);
   }
 

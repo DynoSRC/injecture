@@ -42,6 +42,47 @@ describe('Injecture', function() {
 
   });
 
+  it('registerClass will invoke the constructor with arguments pass into get', done => {
+
+    const argCollector = [];
+    injecture.registerClass(class TestConstructor{
+      constructor(...args) {
+        argCollector.push(args);
+      }
+    })
+
+    injecture.get('TestConstructor',  'beep', 'boop');
+    assert.deepEqual(argCollector.pop(), ['beep', 'boop']);
+
+  
+    injecture.get('TestConstructor',  'meow', 'bark', 'zeep');
+    assert.deepEqual(argCollector.pop(), ['meow', 'bark', 'zeep']);
+
+    done();
+  });
+
+  
+
+  it('registerClass will invoke the constructor with arguments from factoryArgs', done => {
+
+    const argCollector = [];
+    injecture.registerClass(class TestConstructor2 {
+      constructor(...args) {
+        argCollector.push(args);
+      }
+    }, {
+      factoryArgs: ['123', '456']
+    })
+
+    injecture.get('TestConstructor2');
+    assert.deepEqual(argCollector.pop(), ['123', '456'], 'Should pass in factory args into constructor');
+
+    injecture.get('TestConstructor2',  'meow', 'bark', 'zeep');
+    assert.deepEqual(argCollector.pop(), ['meow', 'bark', 'zeep'], 'args passed into get still takes precedence');
+
+    done();
+  });
+
   it('will map instances by key field', done => {
 
     class ClassD {
