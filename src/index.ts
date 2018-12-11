@@ -1,4 +1,5 @@
-const globalInjectureStore = require('./injecture-store');
+
+import * as globalInjectureStore from './injecture-store'
 
 
 const registerDefaults = {
@@ -30,9 +31,11 @@ function addToInstanceStore(instanceStore, key, instance, instanceIndexField) {
 
 class Injecture {
 
+  get = this.create;
+  selectors = {};
+  instanceStore = null;
+
   constructor(injections) {
-    this.get = this.create;
-    this.selectors = {};
     this.instanceStore = injections.instanceStore;
 
     /**
@@ -247,7 +250,7 @@ class Injecture {
   
   // these are only here for backwards compat, remove this @ v2.0.0
   addInterfaceReducers(...args) { this.addInterfaceKeySelectors(...args); }
-  addInterfaceReducer(...args) {  this.addInterfaceKeySelector(...args); }
+  addInterfaceReducer(interfaceType, selector) {  this.addInterfaceKeySelector(interfaceType, selector); }
 
 
   getInstanceByInterface(interfaceType) {
