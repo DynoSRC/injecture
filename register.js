@@ -4,7 +4,7 @@ require('@babel/register')({
    "presets": [
      ["@babel/preset-env", {
        "targets": {
-         "node": '8.10.0'
+         "ie": "11"
        }
      }],
      ["@babel/preset-typescript"]
