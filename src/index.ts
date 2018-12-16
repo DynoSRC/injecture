@@ -212,14 +212,14 @@ class Injecture {
   allInstances(key) {
     if (!this.instanceStore[key]) return [];
 
-    return Object.keys(this.instanceStore[key].instances).map(index => {
+    return Object.keys(this.instanceStore[key].instances).map(index => { 
       return this.instanceStore[key].instances[index];
     });
 
   }
 
   getKeysByInterface(interfaceType) {
-    const interfaces = this.instanceStore[interfaceType] || {};
+    const interfaces = this.instanceStore[interfaceType] || { keys: []};
     const selectors = this.selectors[interfaceType] || [defaultSelector];
 
     const keys = interfaces.keys.map(key => {

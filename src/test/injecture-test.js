@@ -531,4 +531,11 @@ describe('Injecture', function() {
     done();
   });
 
+  it('Can ask for keys when no interface exists', done => {
+    
+    const keys = injecture.getKeysByInterface('wefoijwegoih2');
+    assert.equal(keys.length, 0);
+    done();
+  });
+
 });
