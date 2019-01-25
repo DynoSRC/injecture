@@ -54,14 +54,14 @@ describe('Injecture', function() {
     injecture.get('TestConstructor',  'beep', 'boop');
     assert.deepEqual(argCollector.pop(), ['beep', 'boop']);
 
-  
+
     injecture.get('TestConstructor',  'meow', 'bark', 'zeep');
     assert.deepEqual(argCollector.pop(), ['meow', 'bark', 'zeep']);
 
     done();
   });
 
-  
+
 
   it('registerClass will invoke the constructor with arguments from factoryArgs', done => {
 
@@ -515,7 +515,6 @@ describe('Injecture', function() {
     injecture.addInterfaceReducers({
       interfaceType: 'instanceStore',
       reducer: function(keys) {
-        console.log("####")
         return keys.filter(key => key.key === 'MyCustomStore');
       }
     });
@@ -532,9 +531,23 @@ describe('Injecture', function() {
   });
 
   it('Can ask for keys when no interface exists', done => {
-    
+
     const keys = injecture.getKeysByInterface('wefoijwegoih2');
     assert.equal(keys.length, 0);
+    done();
+  });
+
+  it('global store can be cleared', done => {
+
+    injecture.registerClass(class ClassAAA {});
+
+    const globalStore = require('../injecture-store');
+    assert.strictEqual(injecture.instanceStore, require('../injecture-store'))
+    assert.ok(Object.keys(globalStore).length > 0);
+
+    const clear = require('../clear');
+    clear();
+    assert.equal(Object.keys(globalStore).length, 0);
     done();
   });
 

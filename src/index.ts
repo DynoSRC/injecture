@@ -1,5 +1,5 @@
 
-import * as globalInjectureStore from './injecture-store'
+const globalInjectureStore = require('./injecture-store');
 
 
 const registerDefaults = {
@@ -212,7 +212,7 @@ class Injecture {
   allInstances(key) {
     if (!this.instanceStore[key]) return [];
 
-    return Object.keys(this.instanceStore[key].instances).map(index => { 
+    return Object.keys(this.instanceStore[key].instances).map(index => {
       return this.instanceStore[key].instances[index];
     });
 
@@ -247,7 +247,7 @@ class Injecture {
     if (!this.selectors[interfaceType]) this.selectors[interfaceType] = [];
     this.selectors[interfaceType].push(selector);
   }
-  
+
   // these are only here for backwards compat, remove this @ v2.0.0
   addInterfaceReducers(...args) { this.addInterfaceKeySelectors(...args); }
   addInterfaceReducer(interfaceType, selector) {  this.addInterfaceKeySelector(interfaceType, selector); }
